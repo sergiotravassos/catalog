@@ -2,7 +2,7 @@ package com.sergiotravassos.catalog.services;
 
 import java.util.Optional;
 
-import javax.persistence.EntityExistsException;
+import javax.persistence.EntityNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
@@ -26,7 +26,7 @@ public class ProductService {
 
 	@Autowired
 	private ProductRepository productRepository;
-	
+
 	@Autowired
 	private CategoryRepository categoryRepository;
 
@@ -58,7 +58,7 @@ public class ProductService {
 			copyDtoToEntity(dto, entity);
 			entity = productRepository.save(entity);
 			return new ProductDTO(entity);
-		} catch (EntityExistsException e) {
+		} catch (EntityNotFoundException e) {
 			throw new ResourceNotFoundException("Id not found " + id);
 		}
 	}
@@ -72,19 +72,19 @@ public class ProductService {
 			throw new DatabaseException("Integrity violation");
 		}
 	}
-	
+
 	private void copyDtoToEntity(ProductDTO dto, Product entity) {
 		entity.setName(dto.getName());
 		entity.setDescription(dto.getDescription());
 		entity.setDate(dto.getDate());
 		entity.setImgUrl(dto.getImgUrl());
 		entity.setPrice(dto.getPrice());
-		
+
 		entity.getCategories().clear();
-		for(CategoryDTO catDto : dto.getCategories()) {
+		for (CategoryDTO catDto : dto.getCategories()) {
 			Category category = categoryRepository.getReferenceById(catDto.getId());
 			entity.getCategories().add(category);
 		}
-		
+
 	}
 }
