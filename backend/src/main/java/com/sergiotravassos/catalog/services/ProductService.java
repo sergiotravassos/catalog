@@ -4,6 +4,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import javax.persistence.EntityExistsException;
 import javax.persistence.EntityNotFoundException;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,7 +36,7 @@ public class ProductService {
 	@Transactional(readOnly = true)
 	public Page<ProductDTO> findAllPaged(Long categoryId, String name, Pageable pageable) {
 		List<Category> categories = (categoryId == 0) ? null : Arrays.asList(categoryRepository.getReferenceById(categoryId));
-		Page<Product> page = productRepository.search(categories, name, pageable);
+		Page<Product> page = productRepository.find(categories, name, pageable);
 		productRepository.findProductsWithCategories(page.getContent());
 		return page.map(x -> new ProductDTO(x, x.getCategories()));
 	}
@@ -62,7 +63,7 @@ public class ProductService {
 			copyDtoToEntity(dto, entity);
 			entity = productRepository.save(entity);
 			return new ProductDTO(entity);
-		} catch (EntityNotFoundException e) {
+		} catch (EntityNotFoundException | EntityExistsException e) {
 			throw new ResourceNotFoundException("Id not found " + id);
 		}
 	}

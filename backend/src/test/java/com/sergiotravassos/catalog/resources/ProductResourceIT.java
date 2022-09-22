@@ -18,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.sergiotravassos.catalog.dto.ProductDTO;
 import com.sergiotravassos.catalog.tests.Factory;
+import com.sergiotravassos.catalog.tests.TokenUtil;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -30,12 +31,19 @@ public class ProductResourceIT {
 	@Autowired
 	private ObjectMapper objectMapper;
 
+	@Autowired
+	private TokenUtil tokenUtil;
+	
 	private long existingId;
 	private long nonExistingId;
 	private long countTotalProducts;
+	private String username;
+	private String password;
 
 	@BeforeEach
 	void setUp() throws Exception {
+		username = "maria@gmail.com";
+		password = "123456";
 		existingId = 1L;
 		nonExistingId = 1000L;
 		countTotalProducts = 25L;
@@ -57,12 +65,16 @@ public class ProductResourceIT {
 
 	@Test
 	public void updateShouldReturnProductDTOWhenIdExists() throws Exception {
+		
+		String accessToken = tokenUtil.obtainAccessToken(mockMvc, username, password);
+		
 		ProductDTO productDto = Factory.createProductDto();
 
 		String jsonBody = objectMapper.writeValueAsString(productDto);
 		String expectedName = productDto.getName();
 
 		ResultActions result = mockMvc.perform(put("/products/{id}", existingId)
+				.header("Authorization", "Bearer " + accessToken)
 				.content(jsonBody)
 				.contentType(MediaType.APPLICATION_JSON)
 				.accept(MediaType.APPLICATION_JSON));
@@ -75,11 +87,15 @@ public class ProductResourceIT {
 
 	@Test
 	public void updateShouldReturnNotFoundWhenIdDoesNotExists() throws Exception {
+		
+		String accessToken = tokenUtil.obtainAccessToken(mockMvc, username, password);
+		
 		ProductDTO productDto = Factory.createProductDto();
 		
 		String jsonBody = objectMapper.writeValueAsString(productDto);
 		
 		ResultActions result = mockMvc.perform(put("/products/{id}", nonExistingId)
+				.header("Authorization", "Bearer " + accessToken)
 				.content(jsonBody)
 				.contentType(MediaType.APPLICATION_JSON)
 				.accept(MediaType.APPLICATION_JSON));
